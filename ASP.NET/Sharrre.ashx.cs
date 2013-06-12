@@ -62,13 +62,28 @@ namespace Lidd.Handlers
         private void GetStumbleInfo(Uri baseUri)
         {
             var stumbleObject = GetJsonObject(string.Format("http://www.stumbleupon.com/services/1.01/badge.getinfo?url={0}", WebUtility.UrlEncode(baseUri.AbsoluteUri)));
-            resultDictionary["count"] = stumbleObject.result.views;
+            try
+            {
+                resultDictionary["count"] = stumbleObject.result.views;
+            }
+            catch (Exception)
+            {
+                resultDictionary["count"] = 0;
+            }
         }
 
-        private void GetPinterestInfo(Uri baseUri) 
+        private void GetPinterestInfo(Uri baseUri)
         {
             var pinObject = GetJsonObject(string.Format("http://api.pinterest.com/v1/urls/count.json?callback=&url={0}", WebUtility.UrlEncode(baseUri.AbsoluteUri)), PinterestJsonTransformer);
-            resultDictionary["count"] = pinObject.count;
+            try
+            {
+                resultDictionary["count"] = pinObject.count;
+            }
+            catch (Exception)
+            {
+                
+                resultDictionary["count"] = 0;
+            }
         }
 
         private string PinterestJsonTransformer(string baseJson)
@@ -87,23 +102,38 @@ namespace Lidd.Handlers
 
         private HtmlDocument GetHtmlDocument(string path)
         {
+            try
+            {
+                var gplusUrl = string.Format(path);
+                var client = new HtmlWeb();
+                var htmlDocument = client.Load(gplusUrl);
 
-            var gplusUrl = string.Format(path);
-            var client = new HtmlWeb();
-            var htmlDocument = client.Load(gplusUrl);
-
-            return htmlDocument;
+                return htmlDocument;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError(string.Format("Exception occur in Sharrre handler (GetHtmlDocument) : {0}", ex.ToString()));
+                return new HtmlDocument();
+            }
         }
 
         private dynamic GetJsonObject(string path, Func<string, string> jsonPretransformation = null)
         {
-            WebClient webClient = new WebClient();
-            var result = webClient.DownloadString(path);
-            if (jsonPretransformation != null)
+            try
             {
-                result = jsonPretransformation.Invoke(result);
+                WebClient webClient = new WebClient();
+                var result = webClient.DownloadString(path);
+                if (jsonPretransformation != null)
+                {
+                    result = jsonPretransformation.Invoke(result);
+                }
+                return JsonConvert.DeserializeObject<dynamic>(result);
             }
-            return JsonConvert.DeserializeObject<dynamic>(result);
+            catch (Exception ex)
+            {
+                System.Diagnostics.Trace.TraceError(string.Format("Exception occur in Sharrre handler (GetJsonObject) : {0}", ex.ToString()));
+                return JsonConvert.DeserializeObject<dynamic>("{}");
+            }
         }
         public bool IsReusable
         {

@@ -7,7 +7,7 @@ using System.Xml;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 
-namespace Lidd.Handlers
+namespace Sharrre.Handlers
 {
     /// <summary>
     /// ASP.NET Version of sharrre.php. Please view README-ASPNET.txt.
